@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>服务发现模拟器 · 多客户端实时面板</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header>
+  <h1>服务发现模拟器</h1>
+  <span class="sub">revision 日志 · 快照/增量续订 · 慢订阅端背压</span>
+  <span class="spacer"></span>
+  <span class="pill"><span class="dot" style="background:var(--good)"></span>
+    <span id="conn-pill">连接中…</span></span>
+  <span class="pill">head revision <strong id="pill-head">–</strong></span>
+  <span class="pill">压缩水位线 <strong id="pill-watermark">–</strong></span>
+</header>
+
+<main>
+  <!-- Server stat tiles -->
+  <div class="grid cols-4" id="server-tiles"></div>
+
+  <div class="grid cols-2 section-gap">
+    <!-- Node table -->
+    <section class="card">
+      <h2>节点视图（服务端权威状态）</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>节点</th><th>地址</th><th>版本</th><th>可用区</th><th>存活(s)</th>
+          </tr></thead>
+          <tbody id="node-tbody"></tbody>
+        </table>
+      </div>
+      <div class="controls">
+        <label class="field">节点名<input id="in-name" value="svc-new"></label>
+        <label class="field">地址<input id="in-addr" value="10.0.0.99"></label>
+        <label class="field">可用区
+          <select id="in-zone"><option>az-1</option><option>az-2</option></select>
+        </label>
+        <button class="primary" onclick="registerNode()">注册 / 更新</button>
+        <button class="danger" onclick="deregisterNode()">注销首个节点</button>
+      </div>
+      <div class="controls">
+        <label class="field">压缩保留事件数<input id="in-retain" type="number"
+          value="6" min="1" max="50" style="width:90px"></label>
+        <button onclick="compactHistory()">立即压缩历史</button>
+        <button id="btn-churn" onclick="toggleChurn()">启动自动变更</button>
+      </div>
+      <div style="margin-top:12px">
+        <div class="watermark-bar" id="wm-bar">
+          <div class="compacted" style="width:0%"></div>
+          <div class="retained" style="width:0%"></div>
+        </div>
+        <div class="legend-inline">
+          <span><span class="swatch" style="background:var(--series-6)"></span>已压缩（续订此区间需快照）</span>
+          <span><span class="swatch" style="background:var(--series-3)"></span>保留的增量日志</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Audit log -->
+    <section class="card">
+      <h2>服务器事件流（重置 / 压缩 / 陈旧拦截）</h2>
+      <pre class="audit" id="audit"></pre>
+    </section>
+  </div>
+
+  <!-- Client cards -->
+  <h2 style="margin:26px 0 10px;font-size:14px;text-transform:uppercase;
+      letter-spacing:.06em;color:var(--text-muted)">订阅端视图（点击暂停观察追赶）</h2>
+  <div class="grid cols-4" id="client-cards"></div>
+
+  <!-- Tombstones -->
+  <section class="card section-gap">
+    <h2>墓碑（注销版本栅栏：延迟旧事件据此被拒）</h2>
+    <table>
+      <thead><tr><th>节点</th><th>死亡版本</th></tr></thead>
+      <tbody id="tomb-tbody"></tbody>
+    </table>
+  </section>
+</main>
+
+<script src="/app.js"></script>
+</body>
+</html>
